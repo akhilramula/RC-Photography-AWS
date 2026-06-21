@@ -37,24 +37,27 @@ jobs:
       - name: Copy JAR to EC2
         run: |
           scp -o StrictHostKeyChecking=no \
-          -i ~/.ssh/id_rsa \
-          target/RC_Photography-0.0.1-SNAPSHOT.jar \
-          ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ec2-user/app/app.jar
+            -i ~/.ssh/id_rsa \
+            target/RC_Photography-0.0.1-SNAPSHOT.jar \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ec2-user/app/app.jar
 
       - name: Restart Application
         run: |
           ssh -o StrictHostKeyChecking=no \
-          -i ~/.ssh/id_rsa \
-          ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            -i ~/.ssh/id_rsa \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
 
             pkill -f app.jar || true
 
-            nohup java -jar \
-            /home/ec2-user/app/app.jar \
-            > /home/ec2-user/app/app.log 2>&1 &
+            export DATABASE_URL="${{ secrets.DATABASE_URL }}"
+            export USERNAME="${{ secrets.USERNAME }}"
+            export PASSWORD="${{ secrets.PASSWORD }}"
 
-            sleep 10
+            nohup java -jar /home/ec2-user/app/app.jar \
+              > /home/ec2-user/app/app.log 2>&1 &
 
-            ps -ef | grep app.jar
+            sleep 15
+
+            tail -30 /home/ec2-user/app/app.log
 
           EOF
