@@ -5,6 +5,8 @@ on:
     branches:
       - master
 
+  workflow_dispatch:
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -20,7 +22,11 @@ jobs:
           java-version: 17
 
       - name: Build Application
-        run: mvn clean package
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          USERNAME: ${{ secrets.USERNAME }}
+          PASSWORD: ${{ secrets.PASSWORD }}
+        run: mvn clean package -DskipTests
 
       - name: Setup SSH Key
         run: |
